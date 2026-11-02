@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0d1117">
+  <title>MWDT</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+
+<header class="header">
+  <div class="header__inner">
+    <div class="logo">MW</div>
+    <div class="title">
+      MWDT
+      <small id="headerSub">Настройка</small>
+    </div>
+    <div class="header__spacer"></div>
+    <button class="btn btn--primary" id="btnPdf" style="display:none" title="Скачать PDF">
+      <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+        <path d="M4 1c-.55 0-1 .45-1 1v12c0 .55.45 1 1 1h8c.55 0 1-.45 1-1V5l-4-4H4zm4 1.5L11.5 6H8V2.5zM5 9h6v1H5V9zm0 3h6v1H5v-1z"/>
+      </svg>
+      <span>PDF</span>
+    </button>
+  </div>
+</header>
+
+<main>
+
+  <section class="screen active" id="s-welcome">
+    <div class="welcome">
+      <div class="welcome__logo">MW</div>
+      <h1 class="welcome__title">MWDT</h1>
+      <p class="welcome__sub">Проверим, подходит ли ваш тепловой насос для дома, и рассчитаем его работу.</p>
+
+      <div class="welcome__steps">
+        <div class="welcome__step">
+          <div class="welcome__num">1</div>
+          <div class="welcome__text"><b>Насос</b>Мощность, источник, хладагент</div>
+        </div>
+        <div class="welcome__step">
+          <div class="welcome__num">2</div>
+          <div class="welcome__text"><b>Дом</b>Площадь, утепление, регион</div>
+        </div>
+        <div class="welcome__step">
+          <div class="welcome__num">3</div>
+          <div class="welcome__text"><b>Отопление</b>Тип системы, ГВС, резерв</div>
+        </div>
+        <div class="welcome__step">
+          <div class="welcome__num">4</div>
+          <div class="welcome__text"><b>Результат</b>Подходит ли, COP, экономика</div>
+        </div>
+      </div>
+
+      <button class="btn btn--primary btn--block" data-go="pump">Начать настройку</button>
+    </div>
+  </section>
+
+  <section class="screen" id="s-pump">
+    <div class="progress">
+      <div class="progress__step done"></div>
+      <div class="progress__step active"></div>
+      <div class="progress__step"></div>
+      <div class="progress__step"></div>
+    </div>
+
+    <div class="card">
+      <div class="card__header">
+        <div class="card__title"><span class="step">1</span> Характеристики насоса</div>
+      </div>
+      <div class="card__body">
+        <div class="field">
+          <label for="pumpModel">Модель (необязательно)</label>
+          <input type="text" id="pumpModel" class="input" placeholder="MWDT-AIR-12">
+        </div>
+
+        <div class="field">
+          <label>Тип источника тепла</label>
+          <div class="radiocards radiocards--3">
+            <label class="radiocard" data-val="air">
+              <input type="radio" name="pumpSource" value="air">
+              <span class="radiocard__title"><span class="dot"></span>Воздух</span>
+              <span class="radiocard__desc">Уличный воздух</span>
+            </label>
+            <label class="radiocard selected" data-val="soil">
+              <input type="radio" name="pumpSource" value="soil" checked>
+              <span class="radiocard__title"><span class="dot"></span>Грунт</span>
+              <span class="radiocard__desc">Коллектор / зонды</span>
+            </label>
+            <label class="radiocard" data-val="water">
+              <input type="radio" name="pumpSource" value="water">
+              <span class="radiocard__title"><span class="dot"></span>Вода</span>
+              <span class="radiocard__desc">Водоём / скважина</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="row row--2">
+          <div class="field">
+            <label for="pumpHeatPower">Тепловая мощность, кВт</label>
+            <input type="number" id="pumpHeatPower" class="input" value="12" min="1" max="100" step="0.1" inputmode="decimal">
+          </div>
+          <div class="field">
+            <label for="pumpElPower">Потребление, кВт</label>
+            <input type="number" id="pumpElPower" class="input" value="3.2" min="0.5" max="30" step="0.1" inputmode="decimal">
+          </div>
+        </div>
+
+        <div class="row row--2">
+          <div class="field">
+            <label for="pumpRefrigerant">Хладагент</label>
+            <select id="pumpRefrigerant" class="select">
+              <option value="R32" selected>R32</option>
+              <option value="R410A">R410A</option>
+              <option value="R290">R290</option>
+              <option value="R134a">R134a</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="pumpMaxFlow">Макс. подача, °C</label>
+            <input type="number" id="pumpMaxFlow" class="input" value="55" min="30" max="80" inputmode="numeric">
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="pumpMinT">Мин. t° улицы, °C</label>
+          <input type="number" id="pumpMinT" class="input" value="-25" min="-40" max="0" inputmode="numeric">
+        </div>
+
+        <div class="alert alert--info">
+          <div>i</div>
+          <div>COP по паспорту = <b id="pumpCopPreview">3,75</b></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-actions">
+      <div class="footer-actions__inner">
+        <button class="btn" data-go="welcome">Назад</button>
+        <button class="btn btn--primary" data-go="house">Далее</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="s-house">
+    <div class="progress">
+      <div class="progress__step done"></div>
+      <div class="progress__step done"></div>
+      <div class="progress__step active"></div>
+      <div class="progress__step"></div>
+    </div>
+
+    <div class="card">
+      <div class="card__header">
+        <div class="card__title"><span class="step">2</span> Параметры дома</div>
+      </div>
+      <div class="card__body">
+        <div class="row row--2">
+          <div class="field">
+            <label for="area">Площадь, м²</label>
+            <input type="number" id="area" class="input" value="120" min="10" max="2000" inputmode="numeric">
+          </div>
+          <div class="field">
+            <label for="height">Высота потолков, м</label>
+            <input type="number" id="height" class="input" value="2.8" min="2" max="5" step="0.1" inputmode="decimal">
+          </div>
+        </div>
+
+        <div class="row row--2">
+          <div class="field">
+            <label for="floors">Этажей</label>
+            <input type="number" id="floors" class="input" value="1" min="1" max="5" inputmode="numeric">
+          </div>
+          <div class="field">
+            <label for="region">Регион (t° зимой)</label>
+            <input type="number" id="region" class="input" value="-25" min="-45" max="-5" inputmode="numeric">
+            <div class="hint">Средняя минимальная зимой</div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Утепление</label>
+          <div class="radiocards radiocards--3">
+            <label class="radiocard" data-val="0.55">
+              <input type="radio" name="insulation" value="0.55">
+              <span class="radiocard__title"><span class="dot"></span>Отличное</span>
+              <span class="radiocard__desc">300 мм</span>
+            </label>
+            <label class="radiocard selected" data-val="0.85">
+              <input type="radio" name="insulation" value="0.85" checked>
+              <span class="radiocard__title"><span class="dot"></span>Среднее</span>
+              <span class="radiocard__desc">100 мм</span>
+            </label>
+            <label class="radiocard" data-val="1.10">
+              <input type="radio" name="insulation" value="1.10">
+              <span class="radiocard__title"><span class="dot"></span>Слабое</span>
+              <span class="radiocard__desc">Старый фонд</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Окна</label>
+          <div class="radiocards radiocards--3">
+            <label class="radiocard" data-val="0.80">
+              <input type="radio" name="windows" value="0.80">
+              <span class="radiocard__title"><span class="dot"></span>Трёхкамерные</span>
+            </label>
+            <label class="radiocard selected" data-val="1.00">
+              <input type="radio" name="windows" value="1.00" checked>
+              <span class="radiocard__title"><span class="dot"></span>Двухкамерные</span>
+            </label>
+            <label class="radiocard" data-val="1.30">
+              <input type="radio" name="windows" value="1.30">
+              <span class="radiocard__title"><span class="dot"></span>Деревянные</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="ventilation">Вентиляция</label>
+          <select id="ventilation" class="select">
+            <option value="0.35">Естественная</option>
+            <option value="0.50" selected>Нормальная</option>
+            <option value="0.75">С рекуперацией</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-actions">
+      <div class="footer-actions__inner">
+        <button class="btn" data-go="pump">Назад</button>
+        <button class="btn btn--primary" data-go="system">Далее</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="s-system">
+    <div class="progress">
+      <div class="progress__step done"></div>
+      <div class="progress__step done"></div>
+      <div class="progress__step done"></div>
+      <div class="progress__step active"></div>
+    </div>
+
+    <div class="card">
+      <div class="card__header">
+        <div class="card__title"><span class="step">3</span> Отопление и ГВС</div>
+      </div>
+      <div class="card__body">
+        <div class="field">
+          <label>Тип отопительной системы</label>
+          <div class="radiocards">
+            <label class="radiocard" data-val="35">
+              <input type="radio" name="heatSystem" value="35">
+              <span class="radiocard__title"><span class="dot"></span>Тёплый пол (35 °C)</span>
+              <span class="radiocard__desc">Идеально для теплового насоса</span>
+            </label>
+            <label class="radiocard selected" data-val="45">
+              <input type="radio" name="heatSystem" value="45" checked>
+              <span class="radiocard__title"><span class="dot"></span>Низкотемпературные радиаторы (45 °C)</span>
+              <span class="radiocard__desc">Хорошо для теплового насоса</span>
+            </label>
+            <label class="radiocard" data-val="55">
+              <input type="radio" name="heatSystem" value="55">
+              <span class="radiocard__title"><span class="dot"></span>Стандартные радиаторы (55 °C)</span>
+              <span class="radiocard__desc">Снижает COP</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="row row--2">
+          <div class="field">
+            <label for="tIn">Внутренняя t°, °C</label>
+            <input type="number" id="tIn" class="input" value="22" min="16" max="28" inputmode="numeric">
+          </div>
+          <div class="field">
+            <label for="people">Жильцов</label>
+            <input type="number" id="people" class="input" value="4" min="1" max="10" inputmode="numeric">
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="dhwMode">ГВС</label>
+          <select id="dhwMode" class="select">
+            <option value="0">Без ГВС</option>
+            <option value="200" selected>Стандарт (200 Вт/чел.)</option>
+            <option value="300">Повышенный (300 Вт/чел.)</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="backup">Резерв на пики</label>
+          <select id="backup" class="select">
+            <option value="none" selected>Нет (одновалентный)</option>
+            <option value="ten">Электрический ТЭН</option>
+            <option value="gas">Газовый котёл</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-actions">
+      <div class="footer-actions__inner">
+        <button class="btn" data-go="house">Назад</button>
+        <button class="btn btn--primary" id="btnCalculate">Рассчитать</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="s-result">
+    <div id="verdictBox"></div>
+
+    <div class="card">
+      <div class="card__header"><div class="card__title">Мощности</div></div>
+      <div class="card__body">
+        <div class="kpis">
+          <div class="kpi"><div class="kpi__label">Теплопотери</div><div class="kpi__value" id="r_loss">—<small>кВт</small></div></div>
+          <div class="kpi kpi--accent"><div class="kpi__label">Нужно</div><div class="kpi__value" id="r_need">—<small>кВт</small></div></div>
+          <div class="kpi kpi--success"><div class="kpi__label">Насос</div><div class="kpi__value" id="r_pump">—<small>кВт</small></div></div>
+          <div class="kpi" id="r_margin_kpi"><div class="kpi__label">Запас</div><div class="kpi__value" id="r_margin">—<small>%</small></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card__header"><div class="card__title">COP в реальных условиях</div></div>
+      <div class="card__body">
+        <div class="chart-wrap"><canvas id="copChart"></canvas></div>
+        <div class="kpis" style="margin-top:12px">
+          <div class="kpi"><div class="kpi__label">COP при −7 °C</div><div class="kpi__value" id="r_cop7">—</div></div>
+          <div class="kpi"><div class="kpi__label">SCOP</div><div class="kpi__value" id="r_scop">—</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card__header"><div class="card__title">Рекомендации</div></div>
+      <div class="card__body" id="r_alerts"></div>
+    </div>
+
+    <div class="footer-actions">
+      <div class="footer-actions__inner">
+        <button class="btn" data-go="system">Назад</button>
+        <button class="btn btn--primary" id="btnSaveProject">Сохранить проект</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="s-home">
+    <div class="card">
+      <div class="card__header">
+        <div class="card__title">
+          <svg viewBox="0 0 16 16" fill="currentColor" style="width:16px;height:16px" aria-hidden="true">
+            <path d="M6.5 14.5v-3.5a1.5 1.5 0 013 0v3.5h4.5a.5.5 0 00.5-.5V6.5l-6-5-6 5V14a.5.5 0 00.5.5h4.5z"/>
+          </svg>
+          <span id="h_title">Мой дом</span>
+        </div>
+      </div>
+      <div class="card__body">
+        <div class="kpis">
+          <div class="kpi kpi--accent"><div class="kpi__label">Источник</div><div class="kpi__value" id="h_pump" style="font-size:14px">—</div></div>
+          <div class="kpi kpi--success"><div class="kpi__label">Мощность</div><div class="kpi__value" id="h_power">—<small>кВт</small></div></div>
+          <div class="kpi"><div class="kpi__label">Площадь</div><div class="kpi__value" id="h_area">—<small>м²</small></div></div>
+          <div class="kpi kpi--purple"><div class="kpi__label">Вердикт</div><div class="kpi__value" id="h_verdict" style="font-size:14px">—</div></div>
+        </div>
+      </div>
+      <div class="card__body" style="padding:0">
+        <table class="table"><tbody id="h_table"></tbody></table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card__header"><div class="card__title">Кривая подачи</div></div>
+      <div class="card__body">
+        <div class="chart-wrap"><canvas id="curveChart"></canvas></div>
+        <div class="hint" style="font-size:11px;color:var(--fg-muted);margin-top:8px;line-height:1.5">Введите эти значения в контроллер насоса</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="s-report">
+    <div class="card">
+      <div class="card__header"><div class="card__title">Сводка проекта</div></div>
+      <div class="card__body">
+        <div class="kpis">
+          <div class="kpi kpi--accent"><div class="kpi__label">Насос</div><div class="kpi__value" id="rep_kpi_pump" style="font-size:14px">—</div></div>
+          <div class="kpi kpi--success"><div class="kpi__label">Мощность</div><div class="kpi__value" id="rep_kpi_power">—<small>кВт</small></div></div>
+          <div class="kpi"><div class="kpi__label">COP</div><div class="kpi__value" id="rep_kpi_cop">—</div></div>
+          <div class="kpi kpi--purple"><div class="kpi__label">SCOP</div><div class="kpi__value" id="rep_kpi_scop">—</div></div>
+        </div>
+        <div style="margin-top:16px">
+          <button class="btn btn--primary btn--block" id="btnPdfReport">Скачать PDF</button>
+          <button class="btn btn--block" style="margin-top:8px" id="btnJsonReport">Экспорт JSON</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card__header"><div class="card__title">Тепловой баланс</div></div>
+      <div class="card__body" style="padding:0" id="rep_balance"></div>
+      <div class="add-block">
+        <button class="btn btn--block" id="btnToggleAdd">+ Добавить параметр</button>
+        <div class="add-form" id="addForm">
+          <div class="row">
+            <div class="field">
+              <label for="cf_name">Название</label>
+              <input type="text" id="cf_name" class="input" placeholder="Дополнительные окна мансарды">
+            </div>
+          </div>
+          <div class="row row--2">
+            <div class="field">
+              <label for="cf_value">Значение</label>
+              <input type="number" id="cf_value" class="input" value="1" step="0.01" inputmode="decimal">
+            </div>
+            <div class="field">
+              <label for="cf_unit">Единица</label>
+              <select id="cf_unit" class="select">
+                <option value="кВт">кВт</option>
+                <option value="Вт">Вт</option>
+                <option value="%">%</option>
+              </select>
+            </div>
+          </div>
+          <div class="row">
+            <div class="field">
+              <label>Тип</label>
+              <div class="radiocards radiocards--2">
+                <label class="radiocard selected" data-val="loss">
+                  <input type="radio" name="cfType" value="loss" checked>
+                  <span class="radiocard__title"><span class="dot"></span>Теплопотери</span>
+                </label>
+                <label class="radiocard" data-val="gain">
+                  <input type="radio" name="cfType" value="gain">
+                  <span class="radiocard__title"><span class="dot"></span>Теплопоступление</span>
+                </label>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="field">
+              <label for="cf_note">Заметка</label>
+              <input type="text" id="cf_note" class="input" placeholder="Замерено тепловизором">
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:12px">
+            <button class="btn" style="flex:1" id="btnCancelAdd">Отмена</button>
+            <button class="btn btn--primary" style="flex:1" id="btnConfirmAdd">Добавить</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card__header"><div class="card__title">Полный отчёт</div></div>
+      <div class="card__body" style="padding:0">
+        <table class="table"><tbody id="rep_table"></tbody></table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card__header"><div class="card__title">Версии отчёта</div></div>
+      <div class="card__body" style="padding:0" id="rep_versions"></div>
+    </div>
+  </section>
+
+  <section class="screen" id="s-economy">
+    <div class="card">
+      <div class="card__header"><div class="card__title">Что влияет на экономику</div></div>
+      <div class="card__body" style="padding:0" id="e_factors"></div>
+    </div>
+
+    <div class="card">
+      <div class="card__header"><div class="card__title">Тарифы</div></div>
+      <div class="card__body">
+        <div class="row row--2">
+          <div class="field">
+            <label for="electricityPrice">Электроэнергия, ₽/кВт·ч</label>
+            <input type="number" id="electricityPrice" class="input" value="6.5" min="1" max="30" step="0.1" inputmode="decimal">
+          </div>
+          <div class="field">
+            <label for="gasPrice">Газ, ₽/м³</label>
+            <input type="number" id="gasPrice" class="input" value="7.5" min="1" max="30" step="0.1" inputmode="decimal">
+          </div>
+        </div>
+        <div class="row row--2" style="margin-top:12px">
+          <div class="field">
+            <label for="seasonHours">Часов отопления в год</label>
+            <input type="number" id="seasonHours" class="input" value="2200" min="500" max="5000" inputmode="numeric">
+          </div>
+          <div class="field">
+            <label for="hpCost">Стоимость насоса, ₽</label>
+            <input type="number" id="hpCost" class="input" value="450000" min="0" step="10000" inputmode="numeric">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card__header"><div class="card__title">Годовые показатели</div></div>
+      <div class="card__body">
+        <div class="kpis kpis--4">
+          <div class="kpi"><div class="kpi__label">кВт·ч/год</div><div class="kpi__value" id="e_kwh">—</div></div>
+          <div class="kpi kpi--accent"><div class="kpi__label">₽/год ТН</div><div class="kpi__value" id="e_rub">—</div></div>
+          <div class="kpi kpi--success"><div class="kpi__label">vs газ</div><div class="kpi__value" id="e_gas">—</div></div>
+          <div class="kpi kpi--purple"><div class="kpi__label">Окупаемость</div><div class="kpi__value" id="e_payback">—</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card__header"><div class="card__title">Разбивка по годам</div></div>
+      <div class="card__body">
+        <div class="chart-wrap"><canvas id="economyChart"></canvas></div>
+      </div>
+      <div class="card__body" style="padding:0">
+        <table class="table">
+          <thead>
+          <tr><th>Период</th><th>ТН, ₽</th><th>Газ, ₽</th><th>Экономия</th></tr>
+          </thead>
+          <tbody id="e_years"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card__header"><div class="card__title">Сравнение по системам</div></div>
+      <div class="card__body" style="padding:0">
+        <table class="table">
+          <thead>
+          <tr><th>Система</th><th>Капзатраты</th><th>₽/год</th><th>10 лет</th></tr>
+          </thead>
+          <tbody id="e_systems"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="s-settings">
+    <div class="card">
+      <div class="card__header"><div class="card__title">Изменить данные</div></div>
+      <div class="card__body">
+        <button class="btn btn--block" data-go="pump">Характеристики насоса</button>
+        <button class="btn btn--block" style="margin-top:8px" data-go="house">Параметры дома</button>
+        <button class="btn btn--block" style="margin-top:8px" data-go="system">Система отопления</button>
+        <button class="btn btn--block" style="margin-top:8px" data-go="result">Показать результат</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card__header"><div class="card__title">Экспорт</div></div>
+      <div class="card__body">
+        <button class="btn btn--block" id="btnJsonSettings">Экспорт JSON</button>
+        <button class="btn btn--block" style="margin-top:8px" id="btnPdfSettings">Экспорт PDF</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card__header"><div class="card__title">Опасная зона</div></div>
+      <div class="card__body">
+        <button class="btn btn--block btn--danger" id="btnReset">Удалить проект</button>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<nav class="island-nav hidden" id="islandNav">
+  <div class="island">
+    <button class="island__btn active" data-screen="home">
+      <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+        <path d="M6.5 14.5v-3.5a1.5 1.5 0 013 0v3.5h4.5a.5.5 0 00.5-.5V6.5l-6-5-6 5V14a.5.5 0 00.5.5h4.5z"/>
+      </svg>
+      <span>Дом</span>
+    </button>
+    <button class="island__btn" data-screen="report">
+      <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+        <path d="M4 1c-.55 0-1 .45-1 1v12c0 .55.45 1 1 1h8c.55 0 1-.45 1-1V5l-4-4H4zm4 1.5L11.5 6H8V2.5zM5 9h6v1H5V9zm0 3h6v1H5v-1z"/>
+      </svg>
+      <span>Отчёт</span>
+    </button>
+    <button class="island__btn" data-screen="economy">
+      <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+        <path d="M2 2h12v12H2V2zm1 1v3h3V3H3zm4 0v3h3V3H7zm4 0v3h3V3h-3zM3 7v3h3V7H3zm4 0v3h3V7H7zm4 0v3h3V7h-3zM3 11v2h3v-2H3zm4 0v2h3v-2H7z"/>
+      </svg>
+      <span>Эконом</span>
+    </button>
+  </div>
+  <div class="island island--settings">
+    <button class="island__btn" data-screen="settings" aria-label="Настройки">
+      <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+        <path d="M8 5a3 3 0 100 6 3 3 0 000-6zm5.3 3a5.3 5.3 0 01-.1.9l1.7 1.3-1.6 2.8-2-.8a5 5 0 01-1.6.9l-.3 2.1H6.6l-.3-2.1a5 5 0 01-1.6-.9l-2 .8-1.6-2.8 1.7-1.3a5.3 5.3 0 010-1.8L1.1 6.8l1.6-2.8 2 .8a5 5 0 011.6-.9l.3-2.1h2.8l.3 2.1a5 5 0 011.6.9l2-.8 1.6 2.8-1.7 1.3c.06.3.1.6.1.9z"/>
+      </svg>
+    </button>
+  </div>
+</nav>
+
+<div class="toast" id="toast"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
